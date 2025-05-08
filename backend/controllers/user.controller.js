@@ -90,3 +90,58 @@ const logout = async (req,res)=>{
         console.log(error)
     }
 }
+
+const updateProfile = async (req,res) =>{
+    try {
+        const {fullname,email,phoneNumber,bio,skills} = req.body; 
+        
+        const file = req.file
+        if(!fullname || !email || !phoneNumber || !bio || !skills){
+            return res.status(400).json({message:"something is missing",success:false})
+        }
+    
+        //TODO : Cloudinary upload for resume and profile photo
+    
+        const skillsArray = skills.split(",")
+        const userId = req.id;//middleware authentication
+        let user = await User.findById(userId);
+        if(!user){
+            return res.status(400).json({message:"user not found",success:false})
+        }
+    
+        //updating data
+        user.fullname = fullname;
+        user.email = email;
+        user.phoneNumber = phoneNumber;
+        user.profile.bio = bio;
+        user.profile.skills = skillsArray;
+    
+        //TODO : upload resume and profile photo
+    
+        await user.save();
+    
+        user = {
+            _id:user._id,
+            fullname:user.fullname,
+            email:user.email,
+            phoneNumber:user.phoneNumber,
+            role:user.role,
+            profile:user.profile
+        }
+    
+        return res.status(200).json({
+            message:"profile updated successfully",
+            user,
+            success:true
+        })
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+export {
+    register,
+    login,
+    logout,
+    updateProfile
+}
