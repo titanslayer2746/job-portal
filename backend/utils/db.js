@@ -10,3 +10,5 @@ const connectDB = async()=>{
         console.log("mogodb error ====> ",error)
     }
 }
+
+export { connectDB }

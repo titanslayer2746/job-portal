@@ -1,5 +1,5 @@
 import { User } from "../models/user.model.js";
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 const register = async (req,res)=>{
@@ -36,30 +36,34 @@ const register = async (req,res)=>{
 const login = async (req,res)=>{
     try {
         const {email,password,role} = req.body;
+        
         if(!email || !password || !role){
             return res.status(400).json({message:"something is missing"})
         }
+       
 
-        const user = await User.find({email});
+        let user = await User.findOne({email});
         if(!user){
             return res.status(400).json({message:"user not found"})
         }
 
+        
         const isPasswordMatch = await bcrypt.compare(password,user.password);
+        
         if(!isPasswordMatch){
             return res.status(400).json({message:"password is incorrect"})
         }
-
+        
         if(role !== user.role){
             return res.status(400).json({message:"account doesn't exist with current role"})
         }
-
+        
         const tokenData = {
             userId : user._id,
         }
-
+        
         const token = jwt.sign(tokenData,process.env.JWT_SECRET_KEY,{expiresIn:'1d'});
-
+        
         user = {
             _id:user._id,
             fullname:user.fullname,
@@ -68,7 +72,7 @@ const login = async (req,res)=>{
             role:user.role,
             profile:user.profile
         }
-
+        
         return res.status(200).cookie("token",token,{maxAge:1*24*60*60*1000,httpsOnly:true,sameSite:'strict'}).json({
             message: `Welcome Back ${user.fullname}`,
             user,
@@ -76,7 +80,7 @@ const login = async (req,res)=>{
         })
 
     } catch (error) {
-        console.log(error)
+        return res.status(500).json({message:"internal server error",success:false})
     }
 }
 
@@ -96,13 +100,12 @@ const updateProfile = async (req,res) =>{
         const {fullname,email,phoneNumber,bio,skills} = req.body; 
         
         const file = req.file
-        if(!fullname || !email || !phoneNumber || !bio || !skills){
-            return res.status(400).json({message:"something is missing",success:false})
-        }
     
         //TODO : Cloudinary upload for resume and profile photo
-    
-        const skillsArray = skills.split(",")
+
+        let skillsArray;
+        
+        if(skills) skillsArray = skills.split(",")
         const userId = req.id;//middleware authentication
         let user = await User.findById(userId);
         if(!user){
@@ -110,11 +113,11 @@ const updateProfile = async (req,res) =>{
         }
     
         //updating data
-        user.fullname = fullname;
-        user.email = email;
-        user.phoneNumber = phoneNumber;
-        user.profile.bio = bio;
-        user.profile.skills = skillsArray;
+        if(fullname) user.fullname = fullname;
+        if(email) user.email = email;
+        if(phoneNumber) user.phoneNumber = phoneNumber;
+        if(bio) user.profile.bio = bio;
+        if(skills) user.profile.skills = skillsArray;
     
         //TODO : upload resume and profile photo
     

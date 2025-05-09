@@ -24,12 +24,12 @@ const userSchema = new mongoose.Schema({
         required : true,
     },
     profile:{
-        bio:{type:string},
-        skills:[{type:string}],
-        resume:{type:string},
-        resumeOriginalName:{type:string},
+        bio:{type:String},
+        skills:[{type:String}],
+        resume:{type:String},
+        resumeOriginalName:{type:String},
         company:{type:mongoose.Schema.Types.ObjectId, ref:'Company'},
-        profilePhoto:{type:string,default:""},
+        profilePhoto:{type:String,default:""},
     }
 
 },{timestamps:true});
